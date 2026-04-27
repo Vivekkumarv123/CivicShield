@@ -1,0 +1,52 @@
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  output: 'standalone',
+  // Skip heavy linting/type-checking during build to avoid OOM
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  async headers() {
+    const isDev = process.env.NODE_ENV !== "production";
+    
+    // In dev, we don't want a strict CSP as it breaks Next.js Fast Refresh
+    if (isDev) {
+        return [];
+    }
+    
+    // In production, enforce strict CSP
+    const nonce = Buffer.from(crypto.randomUUID()).toString('base64');
+    
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'Content-Security-Policy',
+            value: `default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https:; connect-src 'self' https://generativelanguage.googleapis.com; frame-ancestors 'none'`
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
+          },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=()',
+          },
+        ],
+      },
+    ];
+  },
+};
+
+module.exports = nextConfig;

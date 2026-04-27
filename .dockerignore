@@ -1,0 +1,14 @@
+node_modules
+.git
+.next
+!.next/standalone
+__tests__
+*.test.ts
+*.test.tsx
+.env*.local
+README.md
+scripts/smoke-test.sh
+.eslintrc*
+jest.config.ts
+coverage/
+.husky/

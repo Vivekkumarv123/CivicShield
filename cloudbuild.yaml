@@ -1,0 +1,31 @@
+steps:
+  - id: build
+    name: gcr.io/cloud-builders/docker
+    args: [build, -t, ${_IMAGE_TAG}, --cache-from, ${_IMAGE_TAG}:latest, .]
+  - id: push
+    name: gcr.io/cloud-builders/docker
+    args: [push, ${_IMAGE_TAG}]
+  - id: deploy
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    args:
+      - gcloud run deploy civicshield
+      - --image=${_IMAGE_TAG}
+      - --region=asia-south1
+      - --platform=managed
+      - --allow-unauthenticated
+      - --memory=512Mi
+      - --cpu=1
+      - --min-instances=0
+      - --max-instances=10
+      - --concurrency=80
+      - --port=8080
+      - --set-env-vars=NODE_ENV=production
+      - --set-secrets=GOOGLE_GEMINI_API_KEY=gemini-key:latest,UPSTASH_REDIS_REST_URL=upstash-url:latest,UPSTASH_REDIS_REST_TOKEN=upstash-token:latest
+  - id: smoke-test
+    name: alpine/curl
+    entrypoint: sh
+    args: [scripts/smoke-test.sh, https://civicshield-HASH-el.a.run.app]
+substitutions:
+  _IMAGE_TAG: asia-south1-docker.pkg.dev/${PROJECT_ID}/civicshield/app:${SHORT_SHA}
+options:
+  logging: CLOUD_LOGGING_ONLY
