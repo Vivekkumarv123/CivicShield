@@ -44,9 +44,9 @@ type Mode = "explain" | "factcheck";
 type Locale = "en" | "hi" | "mr";
 
 const QUICK_LINKS = [
-  { keywords: ["Form 6", "register", "voter id registration"], label: "Apply for Voter ID (Form 6)", url: "https://voters.eci.gov.in/" },
-  { keywords: ["Voter ID", "EPIC", "search name", "voter list"], label: "Find My Name in Voter List", url: "https://electoralsearch.eci.gov.in/" },
-  { keywords: ["Results", "counting", "who won", "leads"], label: "View Live Election Results", url: "https://results.eci.gov.in/" },
+  { keywords: ["Form 6", "register", "voter registration", "apply"], label: "Apply for Voter ID (Form 6)", url: "https://voters.eci.gov.in/" },
+  { keywords: ["Voter ID", "EPIC", "search name", "voter list", "my name"], label: "Find My Name in Voter List", url: "https://electoralsearch.eci.gov.in/" },
+  { keywords: ["Result", "counting", "who won", "leads", "winner"], label: "View Live Election Results", url: "https://results.eci.gov.in/" },
 ];
 
 const i18n = {
@@ -189,6 +189,9 @@ export function ChatInterface() {
   };
 
   const onSuggestionClick = (text: string) => {
+    if (text.toLowerCase().includes("fact check:") || text.toLowerCase().includes("क्या मैं") || text.toLowerCase().includes("मी")) {
+      setMode("factcheck");
+    }
     setInput(text);
     handleDirectSubmit(text);
   };
@@ -457,24 +460,21 @@ export function ChatInterface() {
                       <FactCheckResult result={msg.data} query={userQuery} />
                     )}
 
-                    {/* Quick Action Links */}
+                    {/* Actionable ECI Quick Links */}
                     {msg.role === "assistant" && matchedLinks.length > 0 && (
-                      <div className="mt-2 space-y-2 w-full animate-in fade-in slide-in-from-top-2">
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">{t.quickActions}</p>
-                        <div className="flex flex-col gap-2">
-                          {matchedLinks.map((link, lIdx) => (
-                            <a 
-                              key={lIdx} 
-                              href={link.url} 
-                              target="_blank" 
-                              rel="noopener noreferrer" 
-                              className="flex items-center justify-between p-3 bg-blue-50 border border-blue-100 rounded-xl hover:bg-blue-100 transition-colors group"
-                            >
-                              <span className="text-[13px] font-bold text-blue-800">{link.label}</span>
-                              <ExternalLink className="w-4 h-4 text-blue-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-                            </a>
-                          ))}
-                        </div>
+                      <div className="mt-3 flex flex-wrap gap-2 w-full animate-in fade-in slide-in-from-top-2">
+                        {matchedLinks.map((link, lIdx) => (
+                          <a 
+                            key={lIdx} 
+                            href={link.url} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-blue-100 rounded-full text-[11px] font-bold text-blue-600 hover:bg-blue-50 hover:border-blue-300 transition-all shadow-sm group"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
+                            {link.label}
+                          </a>
+                        ))}
                       </div>
                     )}
                   </div>

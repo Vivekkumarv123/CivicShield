@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
     
     if (!success) {
       return NextResponse.json(
-        { error: "Rate limit exceeded" },
+        { error: "CivicShield is experiencing high traffic. Please try again in a minute." },
         { status: 429, headers: { ...corsHeaders, ...headers } }
       );
     }

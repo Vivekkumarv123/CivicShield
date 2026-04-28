@@ -19,8 +19,8 @@ export const TimelineStepper = React.memo(({ steps }: { steps: Step[] }) => {
           {/* Card Content */}
           <div className="bg-white border border-slate-100 shadow-sm rounded-xl p-5 hover:shadow-md transition-shadow group">
             <div className="flex items-start justify-between mb-2">
-              <h3 className="text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors flex items-center gap-2">
-                <span className="text-xl opacity-80">{step.icon || "📍"}</span>
+              <h3 className="text-lg font-black text-slate-900 group-hover:text-blue-600 transition-colors flex items-center gap-3">
+                <CheckCircle2 className="w-5 h-5 text-blue-600" />
                 {step.title}
               </h3>
             </div>
