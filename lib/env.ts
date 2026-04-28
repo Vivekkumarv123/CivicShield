@@ -9,7 +9,14 @@ const envSchema = z.object({
 });
 
 const validateEnv = () => {
+  // During build time, we skip strict validation to allow the build to proceed
+  // without needing secrets in the build environment.
+  const isBuildTime = process.env.NEXT_PHASE === 'phase-production-build';
+  
   try {
+    if (isBuildTime) {
+      return envSchema.partial().parse(process.env) as z.infer<typeof envSchema>;
+    }
     return envSchema.parse(process.env);
   } catch (error) {
     if (error instanceof z.ZodError) {

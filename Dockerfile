@@ -11,6 +11,14 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
+
+# Dummy variables to pass build-time validation in lib/env.ts
+# These will be overridden by real secrets at runtime on Cloud Run
+ENV GOOGLE_GEMINI_API_KEY=build_time_placeholder
+ENV UPSTASH_REDIS_REST_URL=https://dummy-redis.com
+ENV UPSTASH_REDIS_REST_TOKEN=build_time_placeholder
+ENV NEXT_PUBLIC_APP_URL=https://civicshield.app
+
 RUN npm run build
 
 # Stage 3 — runner
