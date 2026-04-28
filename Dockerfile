@@ -3,7 +3,7 @@ FROM node:20-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json* ./
 # Using npm install instead of ci if lockfile missing
-RUN npm install --only=production
+RUN npm install
 
 # Stage 2 — builder
 FROM node:20-alpine AS builder
