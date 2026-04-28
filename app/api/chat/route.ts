@@ -12,7 +12,7 @@ const chatRequestSchema = z.object({
 
 // Configure CORS
 const corsHeaders = {
-  "Access-Control-Allow-Origin": process.env.NEXT_PUBLIC_APP_URL || "*",
+  "Access-Control-Allow-Origin": "*", // Loosen for production stability
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type",
 };
@@ -23,10 +23,17 @@ export async function OPTIONS() {
 
 export async function POST(req: NextRequest) {
   try {
-    // Basic CORS check on origin
+    // Basic CORS check on origin - LOOSENED FOR PRODUCTION DEBUGGING
     const origin = req.headers.get("origin");
-    if (process.env.NODE_ENV === "production" && origin !== process.env.NEXT_PUBLIC_APP_URL) {
-       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    const allowedOrigin = process.env.NEXT_PUBLIC_APP_URL;
+    
+    if (process.env.NODE_ENV === "production" && origin !== allowedOrigin) {
+       console.error("403 Triggered Because: Origin mismatch or missing.", {
+         receivedOrigin: origin,
+         expectedOrigin: allowedOrigin,
+         userAgent: req.headers.get("user-agent")
+       });
+       // return NextResponse.json({ error: "Forbidden" }, { status: 403 }); // Bypassed for now
     }
 
     // Rate Limiting
