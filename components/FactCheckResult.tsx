@@ -45,13 +45,6 @@ export const FactCheckResult = React.memo(({ result, query }: { result: FactChec
               Verdict: {result.verdict}
             </h3>
             <div className="flex items-center gap-2">
-              <button 
-                onClick={handleWhatsAppShare}
-                className="flex items-center gap-2 px-4 py-2 rounded-full bg-green-600 text-white text-[11px] font-black uppercase tracking-wider hover:bg-green-700 transition-all shadow-md hover:shadow-lg active:scale-95"
-              >
-                <MessageCircle className="w-3.5 h-3.5 fill-current" />
-                Share on WhatsApp
-              </button>
               <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/80 border border-current/20 text-[10px] font-bold uppercase tracking-wider text-slate-400">
                  <ShieldCheck className="w-3 h-3" />
                  Verified
@@ -106,6 +99,21 @@ export const FactCheckResult = React.memo(({ result, query }: { result: FactChec
             </div>
           </div>
         )}
+
+        {/* WhatsApp Viral Sharing */}
+        <div className="mt-6 border-t pt-4">
+          <a
+            href={`https://wa.me/?text=${encodeURIComponent(
+              '🚨 *CivicShield Fact-Check* 🚨\n\n*Verdict:* ' + result.verdict + '\n\nVerify here: ' + (process.env.NEXT_PUBLIC_APP_URL || 'https://civicshield-242730164190.asia-south1.run.app')
+            )}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg transition-colors shadow-sm"
+          >
+            <MessageCircle className="w-5 h-5" />
+            Share on WhatsApp
+          </a>
+        </div>
       </div>
     </div>
   );

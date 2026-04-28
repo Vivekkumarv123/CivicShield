@@ -21,7 +21,8 @@ import {
   MicOff,
   Volume2,
   VolumeX,
-  ExternalLink
+  ExternalLink,
+  MessageCircle
 } from "lucide-react";
 
 // Add missing types for browser APIs
@@ -442,6 +443,22 @@ export function ChatInterface() {
                           : "bg-white text-slate-800 border border-slate-200 rounded-2xl rounded-tl-sm"
                       }`}>
                         {msg.content}
+                        
+                        {msg.role === "assistant" && (
+                          <div className="mt-4 pt-3 border-t border-slate-100/50">
+                            <a
+                              href={`https://wa.me/?text=${encodeURIComponent(
+                                `🚨 *CivicShield Update* 🚨\n\n${msg.content.substring(0, 150)}...\n\nRead more at: ${process.env.NEXT_PUBLIC_APP_URL || 'https://civicshield-242730164190.asia-south1.run.app'}`
+                              )}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm bg-green-50 hover:bg-green-100 text-green-700 font-bold rounded-md transition-colors"
+                            >
+                              <MessageCircle className="w-4 h-4" />
+                              Share to WhatsApp
+                            </a>
+                          </div>
+                        )}
                       </div>
                     )}
 
@@ -450,6 +467,20 @@ export function ChatInterface() {
                          {msg.content && (
                             <div className="bg-white text-slate-800 px-5 py-4 rounded-2xl rounded-tl-sm border border-slate-200 mb-4 shadow-sm text-sm md:text-[15px]">
                               {msg.content}
+                              
+                              <div className="mt-4 pt-3 border-t border-slate-100/50">
+                                <a
+                                  href={`https://wa.me/?text=${encodeURIComponent(
+                                    `🚨 *CivicShield Update* 🚨\n\n${msg.content.substring(0, 150)}...\n\nRead more at: ${process.env.NEXT_PUBLIC_APP_URL || 'https://civicshield-242730164190.asia-south1.run.app'}`
+                                  )}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm bg-green-50 hover:bg-green-100 text-green-700 font-bold rounded-md transition-colors"
+                                >
+                                  <MessageCircle className="w-4 h-4" />
+                                  Share to WhatsApp
+                                </a>
+                              </div>
                             </div>
                          )}
                          <TimelineStepper steps={msg.data.timeline || []} />
