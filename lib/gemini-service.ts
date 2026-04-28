@@ -61,7 +61,7 @@ export const outOfScopeSchema = z.object({
 export const geminiService = {
   checkScope: async (message: string) => {
      const result = await generateText({
-       model: google("gemini-2.5-flash"),
+       model: google("gemini-2.5-flash-lite"),
        system: SYSTEM_PROMPT + "\nCheck if the following query is in scope. If not, return the OUT_OF_SCOPE JSON. If it IS in scope, return 'VALID_SCOPE'.",
        prompt: message
      });
@@ -81,7 +81,7 @@ export const geminiService = {
       }
 
       const result = await streamObject({
-        model: google("gemini-2.5-flash"),
+        model: google("gemini-2.5-flash-lite"),
         schema: explainSchema as z.ZodType<z.infer<typeof explainSchema>>,
         output: "object",
         system: SYSTEM_PROMPT + "\n" + getLocalePrompt(locale) + "\nProvide an educational breakdown of the request as a structured timeline. Ensure 'language' exactly matches the active locale.",
@@ -105,7 +105,7 @@ export const geminiService = {
        }
 
       const result = await generateObject({
-        model: google("gemini-2.5-flash"),
+        model: google("gemini-2.5-flash-lite"),
         schema: factCheckSchema as z.ZodType<z.infer<typeof factCheckSchema>>,
         system: `You are CivicShield, an expert fact-checker for the Election Commission of India (ECI). 
 CRITICAL: Debunking rumors, fake voting methods (like online/mobile voting), EVM hacking claims, and WhatsApp misinformation is EXPLICITLY IN SCOPE. You must fact-check these claims using the Google Search tool. 
