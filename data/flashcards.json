@@ -1,0 +1,73 @@
+{
+  "general": [
+    {
+      "term": "EVM",
+      "definition": "Electronic Voting Machine - A device used for recording and counting votes in Indian elections.",
+      "extraFact": "India was one of the first countries to implement EVMs nationwide."
+    },
+    {
+      "term": "VVPAT",
+      "definition": "Voter Verifiable Paper Audit Trail - A machine that prints a slip showing the candidate voted for.",
+      "extraFact": "The slip is visible for 7 seconds before falling into a sealed box."
+    },
+    {
+      "term": "NOTA",
+      "definition": "None of the Above - A ballot option allowing voters to reject all candidates.",
+      "extraFact": "NOTA votes do not affect the win/loss of the leading candidate."
+    },
+    {
+      "term": "EPIC",
+      "definition": "Elector Photo Identity Card - The official voter ID card issued by the ECI.",
+      "extraFact": "It is not mandatory for voting if your name is in the roll and you have other ID."
+    },
+    {
+      "term": "Constituency",
+      "definition": "A specific geographical area represented by an elected official.",
+      "extraFact": "India has 543 Lok Sabha constituencies."
+    }
+  ],
+  "technical": [
+    {
+      "term": "Control Unit",
+      "definition": "The brain of the EVM system, kept with the Presiding Officer.",
+      "extraFact": "It stores the final vote counts securely."
+    },
+    {
+      "term": "Balloting Unit",
+      "definition": "The part of the EVM where voters press the button for their candidate.",
+      "extraFact": "It contains the names and symbols of candidates."
+    },
+    {
+      "term": "Indelible Ink",
+      "definition": "A semi-permanent ink applied to a voter's finger to prevent duplicate voting.",
+      "extraFact": "It contains Silver Nitrate which reacts with sunlight to stain the skin."
+    },
+    {
+      "term": "Form 6",
+      "definition": "The application form for new registration as a general voter.",
+      "extraFact": "Can be filled online via the Voter Service Portal."
+    },
+    {
+      "term": "Model Code of Conduct",
+      "definition": "Guidelines for political parties to ensure fair and peaceful elections.",
+      "extraFact": "It comes into force as soon as the ECI announces the election schedule."
+    }
+  ],
+  "misinformation": [
+    {
+      "term": "Deepfake",
+      "definition": "AI-generated videos that impersonate real officials or candidates.",
+      "extraFact": "ECI monitors and removes deepfakes that aim to mislead voters."
+    },
+    {
+      "term": "Ghost Voting",
+      "definition": "Illegal practice of voting in the name of a person who is deceased or absent.",
+      "extraFact": "Strict verification by polling agents helps prevent this."
+    },
+    {
+      "term": "Paid News",
+      "definition": "Propaganda or biased reports published as news in exchange for money.",
+      "extraFact": "ECI has strict committees to track and penalize paid news."
+    }
+  ]
+}

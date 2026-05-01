@@ -21,9 +21,9 @@ ONLY return the OUT_OF_SCOPE JSON if the query is 100% unrelated to Indian polit
 
 const getLocalePrompt = (locale: string) => {
   const map: Record<string, string> = {
-    en: "Respond in English.",
-    hi: "Respond in Hindi (हिन्दी).",
-    mr: "Respond in Marathi (मराठी)."
+    en: "RESPOND ONLY IN ENGLISH. All text fields, summaries, and descriptions must be in English.",
+    hi: "RESPOND ONLY IN HINDI (हिन्दी). All text fields, summaries, and descriptions must be in Hindi.",
+    mr: "RESPOND ONLY IN MARATHI (मराठी). All text fields, summaries, and descriptions must be in Marathi."
   };
   return map[locale] || map.en;
 };

@@ -1,0 +1,188 @@
+{
+  "voter_registration": [
+    {
+      "question": "What is the minimum age to register as a voter in India?",
+      "options": ["16", "18", "21", "25"],
+      "answer": 1,
+      "explanation": "Citizens who are 18 years of age or older on the qualifying date are eligible to register."
+    },
+    {
+      "question": "Which form is used for fresh registration as a general voter?",
+      "options": ["Form 6", "Form 7", "Form 8", "Form 6A"],
+      "answer": 0,
+      "explanation": "Form 6 is specifically for the registration of new voters."
+    },
+    {
+      "question": "Can an Indian citizen living abroad register to vote?",
+      "options": ["No", "Yes, as an Overseas Voter", "Only if they visit India", "Only if they own property"],
+      "answer": 1,
+      "explanation": "Non-Resident Indians (NRIs) can register as overseas electors using Form 6A."
+    },
+    {
+      "question": "What is the qualifying date for age eligibility in a year?",
+      "options": ["January 1st only", "Jan 1, April 1, July 1, Oct 1", "December 31st", "Election Day"],
+      "answer": 1,
+      "explanation": "The ECI now has four qualifying dates in a year for new voters to register."
+    },
+    {
+      "question": "What does 'EPIC' stand for?",
+      "options": ["Electronic Portal for Indian Citizens", "Elector Photo Identity Card", "Election Process Information Centre", "Every Person Is Counting"],
+      "answer": 1,
+      "explanation": "EPIC is the official identification card issued by the Election Commission of India."
+    },
+    {
+      "question": "Where can you check if your name is in the electoral roll?",
+      "options": ["Local Police Station", "electoralsearch.eci.gov.in", "Google Maps", "Facebook"],
+      "answer": 1,
+      "explanation": "The ECI provides a dedicated portal to search for names in the voter list."
+    },
+    {
+      "question": "How many days before an election does voter registration usually close?",
+      "options": ["10 days", "Approximately 3 weeks", "It stays open until polling day", "6 months"],
+      "answer": 1,
+      "explanation": "Continuous updation usually stops around the time of nomination filing."
+    },
+    {
+      "question": "Which document is NOT typically accepted as proof of residence?",
+      "options": ["Aadhar Card", "Bank Passbook", "Utility Bill", "Gym Membership Card"],
+      "answer": 3,
+      "explanation": "Official documents like Aadhar, bank books, or utility bills are required for residence proof."
+    },
+    {
+      "question": "What is a BLO?",
+      "options": ["Ballot List Observer", "Booth Level Officer", "Basic Link Organizer", "Bureau of Local Operations"],
+      "answer": 1,
+      "explanation": "The BLO is the primary point of contact for voter registration at the local level."
+    },
+    {
+      "question": "Can you register in more than one constituency?",
+      "options": ["Yes, if you have two houses", "No, it is illegal", "Only for state elections", "Only if you are a student"],
+      "answer": 1,
+      "explanation": "A person can only be registered in one place at a time under the law."
+    }
+  ],
+  "election_basics": [
+    {
+      "question": "Who is the current Chief Election Commissioner of India?",
+      "options": ["Sunil Arora", "Rajiv Kumar", "Sushil Chandra", "T.N. Seshan"],
+      "answer": 1,
+      "explanation": "Rajiv Kumar is the current CEC (as of 2024)."
+    },
+    {
+      "question": "What is the term of the Lok Sabha in India?",
+      "options": ["4 years", "5 years", "6 years", "Indefinite"],
+      "answer": 1,
+      "explanation": "The Lok Sabha is elected for a term of five years unless dissolved earlier."
+    },
+    {
+      "question": "What does VVPAT stand for?",
+      "options": ["Voter Verified Paper Audit Trail", "Video Verification of Polling and Testing", "Voter Validation Paper Access Tool", "Virtual Vote Processing and Tracking"],
+      "answer": 0,
+      "explanation": "VVPAT provides a physical paper slip to verify that the vote was cast correctly."
+    },
+    {
+      "question": "What is the maximum number of candidates an EVM can support?",
+      "options": ["16", "32", "64", "384"],
+      "answer": 3,
+      "explanation": "Modern M3 EVMs can support up to 384 candidates including NOTA."
+    },
+    {
+      "question": "Which article of the Constitution establishes the Election Commission?",
+      "options": ["Article 324", "Article 370", "Article 15", "Article 44"],
+      "answer": 0,
+      "explanation": "Article 324 grants the power of superintendence, direction, and control of elections to the ECI."
+    },
+    {
+      "question": "What is 'NOTA'?",
+      "options": ["Next of the Alliance", "None of the Above", "National Order of Trustworthy Agency", "Neutral Option for Total Awareness"],
+      "answer": 1,
+      "explanation": "NOTA allows voters to indicate that they do not support any of the candidates."
+    },
+    {
+      "question": "How many Lok Sabha constituencies are there in India?",
+      "options": ["500", "543", "552", "600"],
+      "answer": 1,
+      "explanation": "There are currently 543 elected constituencies in the Lok Sabha."
+    },
+    {
+      "question": "What is the color of the ink used to mark a voter's finger?",
+      "options": ["Black", "Blue", "Purple (Indelible Ink)", "Red"],
+      "answer": 2,
+      "explanation": "Silver Nitrate based indelible ink is used to prevent multiple voting."
+    },
+    {
+      "question": "Who was the first Chief Election Commissioner of India?",
+      "options": ["Sukumar Sen", "Kalyan Sundaram", "V.S. Ramadevi", "S.Y. Quraishi"],
+      "answer": 0,
+      "explanation": "Sukumar Sen served as the first CEC from 1950 to 1958."
+    },
+    {
+      "question": "What is the Model Code of Conduct (MCC)?",
+      "options": ["A law passed by Parliament", "Guidelines for parties and candidates", "A technical manual for EVMs", "A list of polling booths"],
+      "answer": 1,
+      "explanation": "The MCC is a set of guidelines agreed upon by political parties to ensure fair elections."
+    }
+  ],
+  "misinformation_awareness": [
+    {
+      "question": "Is it possible to vote via WhatsApp or SMS in India?",
+      "options": ["Yes, for NRIs", "Yes, during emergencies", "No, it is a common myth", "Only for senior citizens"],
+      "answer": 2,
+      "explanation": "India does not support any form of internet or mobile voting for general citizens."
+    },
+    {
+      "question": "If you see a video of an EVM being 'hacked', what should you do?",
+      "options": ["Share it immediately", "Check for official ECI clarification", "Assume the election is rigged", "Delete your social media"],
+      "answer": 1,
+      "explanation": "Always verify sensational claims through official sources like ECI's 'Myth vs Reality' register."
+    },
+    {
+      "question": "Can someone find out exactly who you voted for?",
+      "options": ["Yes, the BLO knows", "Yes, via the serial number", "No, the vote is strictly secret", "Only if you win a lottery"],
+      "answer": 2,
+      "explanation": "The secrecy of the ballot is a fundamental right and technical feature of the EVM system."
+    },
+    {
+      "question": "Is Deepfake technology used by the ECI to announce results?",
+      "options": ["Yes, to save time", "No, ECI uses official spokespersons", "Only in regional languages", "Only for counting updates"],
+      "answer": 1,
+      "explanation": "ECI only uses official channels and verified individuals for communication."
+    },
+    {
+      "question": "Can a person vote if their name is in the list but they don't have their EPIC card?",
+      "options": ["No, never", "Yes, with other approved IDs", "Only if the candidate allows", "Only if they pay a fine"],
+      "answer": 1,
+      "explanation": "The ECI allows several alternative IDs (like Aadhar or Passport) if your name is in the roll."
+    },
+    {
+      "question": "What is the 'Indelible Ink' myth?",
+      "options": ["It can be removed with lemon", "It causes skin cancer", "It is used to track your location", "It lasts for 10 years"],
+      "answer": 0,
+      "explanation": "Indelible ink is designed to be very difficult to remove and lemon or soap will not work."
+    },
+    {
+      "question": "Are EVMs connected to the internet?",
+      "options": ["Yes, via Wi-Fi", "Yes, via 5G", "No, they are standalone machines", "Only during results"],
+      "answer": 2,
+      "explanation": "EVMs are standalone, non-networked machines to prevent remote hacking."
+    },
+    {
+      "question": "What is 'Ghost Voting'?",
+      "options": ["Voting after dark", "Voting in the name of a dead person", "Voting without an ID", "Voting for a fictional candidate"],
+      "answer": 1,
+      "explanation": "Ghost voting is an illegal practice of impersonating a deceased voter."
+    },
+    {
+      "question": "If a claim says 'Free balance if you vote for X', is it true?",
+      "options": ["Yes, a govt scheme", "No, it is a fraudulent bribe", "Only for students", "Only in rural areas"],
+      "answer": 1,
+      "explanation": "Bribing voters or making fraudulent promises is a serious electoral offense."
+    },
+    {
+      "question": "How can you verify if a message about polling date change is true?",
+      "options": ["Forward it to 10 friends", "Check eci.gov.in", "Ask a local politician", "Believe it if it has a logo"],
+      "answer": 1,
+      "explanation": "Always rely on the official ECI website or verified social media handles."
+    }
+  ]
+}
