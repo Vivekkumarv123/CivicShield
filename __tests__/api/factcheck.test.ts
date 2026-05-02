@@ -3,6 +3,14 @@
  */
 import { NextRequest } from "next/server";
 
+// Environment Polyfill for NextRequest
+if (!global.Request) {
+  const { Request, Response, Headers } = require('undici');
+  global.Request = Request;
+  global.Response = Response;
+  global.Headers = Headers;
+}
+
 process.env.GOOGLE_GEMINI_API_KEY = "test_key";
 process.env.UPSTASH_REDIS_REST_URL = "http://test.com";
 process.env.UPSTASH_REDIS_REST_TOKEN = "test_token";
@@ -48,7 +56,8 @@ describe("FactCheck API", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    (checkRateLimit as jest.Mock).mockResolvedValue({
+    const mockedCheckRateLimit = checkRateLimit as jest.Mock;
+    mockedCheckRateLimit.mockResolvedValue({
       success: true,
       headers: { "X-RateLimit-Remaining": "19" },
     });
@@ -61,13 +70,15 @@ describe("FactCheck API", () => {
 
   it("returns verdict schema validation success", async () => {
     const mockResponse = {
+      type: "FACTCHECK",
       verdict: "Partially True",
       confidence: 0.8,
       sources: [{ url: "http://example.com", title: "Example", snippet: "Snippet" }],
       explanation: "Expl",
       groundingChunks: ["Chunk"]
     };
-    (geminiService.factCheck as jest.Mock).mockResolvedValue(mockResponse);
+    const mockedFactCheck = geminiService.factCheck as jest.Mock;
+    mockedFactCheck.mockResolvedValue(mockResponse);
 
     const req = mockRequest({ message: "Is EVM hackable?" });
     const res = await POST(req);
@@ -76,23 +87,73 @@ describe("FactCheck API", () => {
     expect(data.verdict).toBe("Partially True");
   });
 
+  it("returns 403 for forbidden origin in production", async () => {
+    const consoleSpy = jest.spyOn(console, "error").mockImplementation(() => { });
+    const originalNodeEnv = process.env.NODE_ENV;
+    (process.env as any).NODE_ENV = "production";
+    const req = new NextRequest("http://localhost/api/factcheck", {
+      method: "POST",
+      headers: { "origin": "http://evil.com" }
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(403);
+    (process.env as any).NODE_ENV = originalNodeEnv;
+    consoleSpy.mockRestore();
+  });
+
+  it("returns 429 when rate limited", async () => {
+    const mockedCheckRateLimit = checkRateLimit as jest.Mock;
+    mockedCheckRateLimit.mockResolvedValueOnce({
+      success: false,
+      headers: { "Retry-After": "60" }
+    });
+    const req = mockRequest({ message: "Hello" });
+    const res = await POST(req);
+    expect(res.status).toBe(429);
+  });
+
+  it("returns 400 for invalid locale", async () => {
+    const req = mockRequest({ message: "test", locale: "fr" });
+    const res = await POST(req);
+    expect(res.status).toBe(400);
+  });
+
+  it("returns 502 for Gemini service failure", async () => {
+    const mockedFactCheck = geminiService.factCheck as jest.Mock;
+    mockedFactCheck.mockRejectedValue(new Error("AI error"));
+
+    const req = mockRequest({ message: "Check this" });
+    const res = await POST(req);
+    expect(res.status).toBe(502);
+  });
+
+  it("returns 400 for empty body or bad JSON", async () => {
+    const reqEmpty = new NextRequest("http://localhost/api/factcheck", { method: "POST", body: null });
+    const resEmpty = await POST(reqEmpty);
+    expect(resEmpty.status).toBe(400);
+
+    const reqBadJson = new NextRequest("http://localhost/api/factcheck", { method: "POST", body: "not-json" });
+    const resBadJson = await POST(reqBadJson);
+    expect(resBadJson.status).toBe(400);
+  });
+
   describe("Schema Tests", () => {
     it("accepts all 4 verdict types", () => {
-        const verdicts = ["True", "False", "Partially True", "Unverified"];
-        verdicts.forEach(v => {
-            const result = factCheckSchema.safeParse({ verdict: v, confidence: 0.5, sources: [], explanation: "", groundingChunks: [] });
-            expect(result.success).toBe(true);
-        });
+      const verdicts = ["True", "False", "Partially True", "Unverified"];
+      verdicts.forEach(v => {
+        const result = factCheckSchema.safeParse({ type: "FACTCHECK", verdict: v, confidence: 0.5, sources: [], explanation: "", groundingChunks: [] });
+        expect(result.success).toBe(true);
+      });
     });
 
     it("clamps confidence out of range or fails validation", () => {
-       const result = factCheckSchema.safeParse({ verdict: "True", confidence: 1.5, sources: [], explanation: "", groundingChunks: [] });
-       expect(result.success).toBe(false); // Schema enforces max 1
+      const result = factCheckSchema.safeParse({ type: "FACTCHECK", verdict: "True", confidence: 1.5, sources: [], explanation: "", groundingChunks: [] });
+      expect(result.success).toBe(false); // Schema enforces max 1
     });
 
     it("allows missing sources by coercing to empty array or accepting empty", () => {
-        const result = factCheckSchema.safeParse({ verdict: "True", confidence: 0.5, sources: [], explanation: "", groundingChunks: [] });
-        expect(result.success).toBe(true);
+      const result = factCheckSchema.safeParse({ type: "FACTCHECK", verdict: "True", confidence: 0.5, sources: [], explanation: "", groundingChunks: [] });
+      expect(result.success).toBe(true);
     });
   });
 });

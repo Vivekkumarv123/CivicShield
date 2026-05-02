@@ -36,11 +36,14 @@ export const FactCheckResult = React.memo(({ result, query }: { result: FactChec
         isPartial ? 'border-amber-500 bg-amber-50/30' :
         'border-slate-500 bg-slate-100/50'
       }`}>
-        <div className={`p-4 rounded-3xl ${
-           isTrue ? 'bg-green-100 text-green-600' :
-           isFalse ? 'bg-red-100 text-red-600' :
-           'bg-amber-100 text-amber-600'
-        }`}>
+        <div 
+          aria-label={`Verdict: ${result.verdict}`}
+          className={`p-4 rounded-3xl ${
+             isTrue ? 'bg-green-100 text-green-600' :
+             isFalse ? 'bg-red-100 text-red-600' :
+             'bg-amber-100 text-amber-600'
+          }`}
+        >
           {isTrue && <CheckCircle className="w-10 h-10" />}
           {isFalse && <XCircle className="w-10 h-10" />}
           {isPartial && <AlertCircle className="w-10 h-10" />}
@@ -81,7 +84,10 @@ export const FactCheckResult = React.memo(({ result, query }: { result: FactChec
             </span>
             <span className="text-slate-900 text-lg">{confidencePercent.toFixed(0)}%</span>
           </div>
-          <div className="h-4 w-full bg-slate-100 rounded-full overflow-hidden p-1 shadow-inner">
+          <div 
+            aria-label={`AI Confidence Score: ${confidencePercent.toFixed(0)} percent`}
+            className="h-4 w-full bg-slate-100 rounded-full overflow-hidden p-1 shadow-inner"
+          >
             <div 
               className={`h-full transition-all duration-[1500ms] ease-out rounded-full shadow-lg ${
                 isTrue ? 'bg-gradient-to-r from-green-400 to-green-600' : 
@@ -107,6 +113,7 @@ export const FactCheckResult = React.memo(({ result, query }: { result: FactChec
                   href={source.url} 
                   target="_blank" 
                   rel="noopener noreferrer"
+                  aria-label={`Source: ${source.title}`}
                   className="group flex items-center gap-3 px-5 py-3 bg-white border border-slate-200 rounded-2xl text-[13px] font-bold text-slate-700 hover:border-blue-400 hover:text-blue-600 hover:shadow-xl transition-all"
                 >
                   <div className="p-1.5 bg-slate-50 rounded-lg group-hover:bg-blue-50">
@@ -128,6 +135,7 @@ export const FactCheckResult = React.memo(({ result, query }: { result: FactChec
             )}`}
             target="_blank"
             rel="noopener noreferrer"
+            aria-label="Share this fact-check on WhatsApp"
             className="inline-flex items-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-black rounded-2xl transition-all shadow-xl shadow-green-600/20 active:scale-95"
           >
             <MessageCircle className="w-5 h-5" />

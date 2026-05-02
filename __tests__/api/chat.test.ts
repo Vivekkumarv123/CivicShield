@@ -3,13 +3,21 @@
  */
 import { NextRequest } from "next/server";
 
+// Environment Polyfill for NextRequest
+if (!global.Request) {
+  const { Request, Response, Headers } = require('undici');
+  global.Request = Request;
+  global.Response = Response;
+  global.Headers = Headers;
+}
+
 process.env.GOOGLE_GEMINI_API_KEY = "test_key";
 process.env.UPSTASH_REDIS_REST_URL = "http://test.com";
 process.env.UPSTASH_REDIS_REST_TOKEN = "test_token";
 process.env.NEXT_PUBLIC_APP_URL = "http://test.com";
-process.env.NODE_ENV = "test";
+(process.env as any).NODE_ENV = "test";
 
-import { POST } from "../../app/api/chat/route";
+import { POST, OPTIONS } from "../../app/api/chat/route";
 import { geminiService } from "../../lib/gemini-service";
 import { checkRateLimit } from "../../lib/rate-limit";
 
@@ -27,34 +35,68 @@ jest.mock("../../lib/logger", () => ({
   logger: {
     info: jest.fn(),
     error: jest.fn(),
+    warn: jest.fn(),
   },
 }));
 
 describe("Chat API", () => {
-  const mockRequest = (body: any) => {
+  const mockRequest = (body: any, headers = {}) => {
     return new NextRequest("http://localhost/api/chat", {
       method: "POST",
-      body: body ? JSON.stringify(body) : null,
+      body: body === undefined ? undefined : (typeof body === 'string' ? body : JSON.stringify(body)),
       headers: {
         "content-type": "application/json",
+        ...headers
       },
     });
   };
 
   beforeEach(() => {
     jest.clearAllMocks();
-    (checkRateLimit as jest.Mock).mockResolvedValue({
+    const mockedCheckRateLimit = checkRateLimit as jest.Mock;
+    mockedCheckRateLimit.mockResolvedValue({
       success: true,
       headers: { "X-RateLimit-Remaining": "19" },
     });
   });
 
-  it("returns 400 for missing body", async () => {
-    const req = mockRequest(null);
+  it("handles OPTIONS request", async () => {
+    const res = await OPTIONS();
+    expect(res.status).toBe(204);
+  });
+
+  it("returns 403 for invalid origin in production", async () => {
+    const originalEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = "production";
+    process.env.ALLOWED_ORIGINS = "https://safe.com";
+
+    const req = mockRequest({ message: "test" }, { "origin": "https://evil.com" });
+    const res = await POST(req);
+    expect(res.status).toBe(403);
+
+    process.env.NODE_ENV = originalEnv;
+  });
+
+  it("returns 400 for empty body", async () => {
+    const req = new NextRequest("http://localhost/api/chat", { method: "POST", body: null });
     const res = await POST(req);
     expect(res.status).toBe(400);
     const data = await res.json();
-    expect(data.error).toContain("Invalid request");
+    expect(data.error).toBe("Invalid request: empty body");
+  });
+
+  it("returns 400 for malformed JSON", async () => {
+    const req = mockRequest("invalid-json");
+    const res = await POST(req);
+    expect(res.status).toBe(400);
+    const data = await res.json();
+    expect(data.error).toBe("Invalid request: bad JSON");
+  });
+
+  it("returns 400 for missing message in body", async () => {
+    const req = mockRequest({});
+    const res = await POST(req);
+    expect(res.status).toBe(400);
   });
 
   it("returns 400 for message too long", async () => {
@@ -62,11 +104,12 @@ describe("Chat API", () => {
     const res = await POST(req);
     expect(res.status).toBe(400);
     const data = await res.json();
-    expect(data.error).toBe("Message too long");
+    expect(data.error).toBe("Invalid request");
   });
 
   it("returns 429 when rate limited", async () => {
-    (checkRateLimit as jest.Mock).mockResolvedValue({
+    const mockedCheckRateLimit = checkRateLimit as jest.Mock;
+    mockedCheckRateLimit.mockResolvedValue({
       success: false,
       headers: { "Retry-After": "60" },
     });
@@ -74,21 +117,13 @@ describe("Chat API", () => {
     const res = await POST(req);
     expect(res.status).toBe(429);
     const data = await res.json();
-    expect(data.error).toBe("Rate limit exceeded");
+    expect(data.error).toBe("CivicShield is experiencing high traffic. Please try again in a minute.");
     expect(res.headers.get("Retry-After")).toBe("60");
   });
 
-  it("returns 200 with out_of_scope JSON from Gemini OUT_OF_SCOPE_CAUGHT", async () => {
-    (geminiService.streamExplanation as jest.Mock).mockRejectedValue(new Error("OUT_OF_SCOPE_CAUGHT"));
-    const req = mockRequest({ message: "Who is the US president?" });
-    const res = await POST(req);
-    expect(res.status).toBe(200);
-    const data = await res.json();
-    expect(data.type).toBe("OUT_OF_SCOPE");
-  });
-
   it("returns 502 for Gemini error, abstracting raw error", async () => {
-    (geminiService.streamExplanation as jest.Mock).mockRejectedValue(new Error("Some internal API fail"));
+    const mockedStream = geminiService.streamExplanation as jest.Mock;
+    mockedStream.mockRejectedValue(new Error("Some internal API fail"));
     const req = mockRequest({ message: "Hello" });
     const res = await POST(req);
     expect(res.status).toBe(502);
@@ -97,13 +132,21 @@ describe("Chat API", () => {
   });
 
   it("returns streaming response for valid request", async () => {
-    const mockToTextStreamResponse = jest.fn().mockReturnValue(new Response("stream_data", { status: 200 }));
-    (geminiService.streamExplanation as jest.Mock).mockResolvedValue({
-      toTextStreamResponse: mockToTextStreamResponse,
+    const mockedStream = geminiService.streamExplanation as jest.Mock;
+    const headerStore: Record<string, string> = {};
+    mockedStream.mockResolvedValue({
+      toTextStreamResponse: () => ({
+        status: 200,
+        headers: {
+          set: (k: string, v: string) => { headerStore[k] = v; },
+          get: (k: string) => headerStore[k] || null,
+        },
+      }),
     });
-    
+
     const req = mockRequest({ message: "Explain voting steps" });
     const res = await POST(req);
     expect(res.status).toBe(200);
   });
+
 });

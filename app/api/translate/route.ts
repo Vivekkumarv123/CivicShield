@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
     Text: ${text}`;
 
     const result = await generateText({
-      model: google("gemini-2.5-flash-lite"),
+      model: google("gemini-2.5-flash"),
       prompt: prompt,
     });
 

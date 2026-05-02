@@ -202,12 +202,11 @@ function Timeline({ t, onNext }: { t: any[], onNext: () => void }) {
 }
 
 function Flashcards({ onNext }: { onNext: () => void }) {
-  const categories = Object.keys(flashcardsData);
-  const [activeCategory, setActiveCategory] = useState(categories[0]);
+  const categories = Object.keys(flashcardsData) as Array<keyof typeof flashcardsData>;
+  const [activeCategory, setActiveCategory] = useState<keyof typeof flashcardsData>(categories[0]);
   const [expandedCard, setExpandedCard] = useState<number | null>(null);
 
   const cards = useMemo(() => {
-    // @ts-ignore
     return [...flashcardsData[activeCategory]];
   }, [activeCategory]);
 
@@ -311,15 +310,16 @@ function Flashcards({ onNext }: { onNext: () => void }) {
 }
 
 function Quiz() {
-  const categories = Object.keys(quizBank);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const categories = Object.keys(quizBank) as Array<keyof typeof quizBank>;
+  type QuizCategory = (typeof categories)[number];
+  const [selectedCategory, setSelectedCategory] = useState<QuizCategory | null>(null);
   const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
   const [score, setScore] = useState(0);
   const [showResult, setShowResult] = useState(false);
   const [shuffledQuestions, setShuffledQuestions] = useState<any[]>([]);
 
-  const startQuiz = (category: string) => {
-    // @ts-ignore
+  const startQuiz = (category: QuizCategory) => {
+    
     const allQuestions = quizBank[category];
     const batch = [...allQuestions]
       .sort(() => Math.random() - 0.5)
@@ -410,7 +410,7 @@ function Quiz() {
         
         <div className="flex flex-col sm:flex-row gap-6 justify-center">
           <button 
-            onClick={() => startQuiz(selectedCategory)}
+            onClick={() => { if (selectedCategory) startQuiz(selectedCategory); }}
             className="flex items-center justify-center gap-4 bg-white border-2 border-slate-100 text-slate-900 px-12 py-6 rounded-[2.5rem] font-black hover:bg-slate-50 transition-all shadow-sm text-lg"
           >
             <RotateCcw className="w-6 h-6" />

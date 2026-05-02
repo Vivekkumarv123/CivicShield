@@ -12,7 +12,10 @@ export const TimelineStepper = React.memo(({ steps }: { steps: Step[] }) => {
       {steps.map((step, index) => (
         <div key={step.id || index} className="relative pl-10 animate-in slide-in-from-left-4 duration-700" style={{ animationDelay: `${index * 150}ms` }}>
           {/* Step Indicator */}
-          <div className="absolute -left-[21px] top-0 w-10 h-10 rounded-2xl flex items-center justify-center font-black text-sm shadow-xl bg-slate-900 text-white ring-8 ring-slate-50 z-10 group-hover:scale-110 transition-transform">
+          <div 
+            aria-label={`Step ${index + 1}`}
+            className="absolute -left-[21px] top-0 w-10 h-10 rounded-2xl flex items-center justify-center font-black text-sm shadow-xl bg-slate-900 text-white ring-8 ring-slate-50 z-10 group-hover:scale-110 transition-transform"
+          >
             {index + 1}
           </div>
 
@@ -44,7 +47,10 @@ export const TimelineStepper = React.memo(({ steps }: { steps: Step[] }) => {
                 ECI Verified Step
               </div>
               
-              <button className="ml-auto flex items-center gap-1.5 text-[11px] font-black uppercase tracking-widest text-slate-400 hover:text-blue-600 transition-colors">
+              <button 
+                aria-label={`View details for ${step.title}`}
+                className="ml-auto flex items-center gap-1.5 text-[11px] font-black uppercase tracking-widest text-slate-400 hover:text-blue-600 transition-colors"
+              >
                 Details
                 <ChevronRight className="w-3 h-3" />
               </button>

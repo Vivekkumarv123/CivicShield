@@ -83,6 +83,7 @@ function ActionButton({ icon, label, onClick, successIcon }: { icon: React.React
   return (
     <button 
       onClick={handleClick}
+      aria-label={label}
       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-900 transition-all text-[10px] font-bold uppercase tracking-tight"
       title={label}
     >
@@ -106,9 +107,71 @@ export function ChatInterface({ initialLocale = "en" }: { initialLocale?: Locale
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
 
+  const startListening = () => {
+    if (!('webkitSpeechRecognition' in window) && !('speechRecognition' in window)) {
+      alert("Speech recognition not supported in this browser.");
+      return;
+    }
+
+    const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).speechRecognition;
+    recognitionRef.current = new SpeechRecognition();
+    recognitionRef.current.continuous = true;
+    recognitionRef.current.interimResults = true;
+    recognitionRef.current.lang = locale === 'hi' ? 'hi-IN' : locale === 'mr' ? 'mr-IN' : 'en-IN';
+
+    recognitionRef.current.onstart = () => setIsListening(true);
+    recognitionRef.current.onend = () => setIsListening(false);
+    recognitionRef.current.onresult = (event: any) => {
+      let interimTranscript = '';
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+          const transcript = event.results[i][0].transcript;
+          setInput(transcript);
+          stopListening();
+          performSubmit(transcript);
+        } else {
+          interimTranscript += event.results[i][0].transcript;
+          setInput(interimTranscript);
+        }
+      }
+    };
+
+    recognitionRef.current.start();
+  };
+
+  const stopListening = () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    }
+  };
+
+  const speakMessage = (text: string) => {
+    if (isMuted || typeof window === 'undefined' || !window.speechSynthesis) return;
+    
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = locale === 'hi' ? 'hi-IN' : locale === 'mr' ? 'mr-IN' : 'en-IN';
+    
+    // Ensure voices are loaded
+    const speak = () => {
+      const voices = window.speechSynthesis.getVoices();
+      const preferredVoice = voices.find(v => v.lang.startsWith(utterance.lang) || v.lang.includes(locale));
+      if (preferredVoice) utterance.voice = preferredVoice;
+      window.speechSynthesis.speak(utterance);
+    };
+
+    if (window.speechSynthesis.getVoices().length === 0) {
+      window.speechSynthesis.onvoiceschanged = speak;
+    } else {
+      speak();
+    }
+  };
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
+
 
   useEffect(() => {
     scrollToBottom();
@@ -178,7 +241,15 @@ export function ChatInterface({ initialLocale = "en" }: { initialLocale?: Locale
 
       if (mode === "factcheck") {
         const data = await res.json();
-        setMessages((prev) => [...prev, { id: Date.now().toString(), role: "assistant", type: "factcheck", content: "", data }]);
+        if (data.type === "OUT_OF_SCOPE") {
+          const msg: Message = { id: Date.now().toString(), role: "assistant", type: "out_of_scope", content: data.message };
+          setMessages((prev) => [...prev, msg]);
+          if (!isMuted) speakMessage(msg.content);
+        } else {
+          const msg: Message = { id: Date.now().toString(), role: "assistant", type: "factcheck", content: data.explanation || "Fact check complete.", data };
+          setMessages((prev) => [...prev, msg]);
+          if (!isMuted) speakMessage(msg.content);
+        }
       } else {
         const reader = res.body?.getReader();
         const decoder = new TextDecoder();
@@ -191,18 +262,31 @@ export function ChatInterface({ initialLocale = "en" }: { initialLocale?: Locale
           }
         }
         
-        // Basic parsing for timeline or text
         try {
-          const parsed = JSON.parse(fullText.replace(/^0:"/, "").replace(/"$/, ""));
-          if (parsed.timeline) {
-            setMessages((prev) => [...prev, { id: Date.now().toString(), role: "assistant", type: "timeline", content: parsed.summary || "", data: parsed }]);
+          // Clean up response if it has SDK prefixes like 0:"..."
+          const cleanedText = fullText.startsWith('0:') ? fullText.substring(2) : fullText;
+          const parsed = JSON.parse(cleanedText.replace(/^"/, "").replace(/"$/, "").replace(/\\"/g, '"'));
+          
+          if (parsed.type === "OUT_OF_SCOPE") {
+            const msg: Message = { id: Date.now().toString(), role: "assistant", type: "out_of_scope", content: parsed.message };
+            setMessages((prev) => [...prev, msg]);
+            if (!isMuted) speakMessage(msg.content);
+          } else if (parsed.timeline) {
+            const msg: Message = { id: Date.now().toString(), role: "assistant", type: "timeline", content: parsed.summary || "", data: parsed };
+            setMessages((prev) => [...prev, msg]);
+            if (!isMuted) speakMessage(msg.content);
           } else {
-            setMessages((prev) => [...prev, { id: Date.now().toString(), role: "assistant", type: "text", content: fullText.replace(/^0:"/, "").replace(/"$/, "") }]);
+            const msg: Message = { id: Date.now().toString(), role: "assistant", type: "text", content: parsed.summary || cleanedText };
+            setMessages((prev) => [...prev, msg]);
+            if (!isMuted) speakMessage(msg.content);
           }
         } catch {
-          setMessages((prev) => [...prev, { id: Date.now().toString(), role: "assistant", type: "text", content: fullText.replace(/^0:"/, "").replace(/"$/, "") || "Analysis complete." }]);
+          const assistantMsg: Message = { id: Date.now().toString(), role: "assistant", type: "text", content: fullText.replace(/^0:"/, "").replace(/"$/, "") || "Analysis complete." };
+          setMessages((prev) => [...prev, assistantMsg]);
+          if (!isMuted) speakMessage(assistantMsg.content);
         }
       }
+
     } catch (err: any) {
       setMessages((prev) => [...prev, { id: Date.now().toString(), role: "assistant", type: "error", content: "Service unavailable. Please try again later." }]);
     } finally {
@@ -230,6 +314,7 @@ export function ChatInterface({ initialLocale = "en" }: { initialLocale?: Locale
 
           <button 
             onClick={handleNewChat}
+            aria-label="Start a new chat"
             className="flex items-center gap-3 w-full p-4 mb-8 bg-white border border-slate-200 rounded-2xl font-bold text-sm hover:shadow-md transition-all group"
           >
             <Plus className="w-4 h-4 text-blue-600 group-hover:rotate-90 transition-transform" />
@@ -242,6 +327,7 @@ export function ChatInterface({ initialLocale = "en" }: { initialLocale?: Locale
               <div className="space-y-1">
                 <button 
                   onClick={() => setMode("explain")}
+                  aria-label="Switch to Educational Mode"
                   className={`flex items-center justify-between w-full p-3 rounded-xl text-sm font-bold transition-all ${mode === "explain" ? "bg-white text-blue-600 shadow-sm border border-slate-200" : "text-slate-500 hover:bg-slate-100"}`}
                 >
                   <div className="flex items-center gap-3">
@@ -252,6 +338,7 @@ export function ChatInterface({ initialLocale = "en" }: { initialLocale?: Locale
                 </button>
                 <button 
                   onClick={() => setMode("factcheck")}
+                  aria-label="Switch to Fact-Check Mode"
                   className={`flex items-center justify-between w-full p-3 rounded-xl text-sm font-bold transition-all ${mode === "factcheck" ? "bg-white text-emerald-600 shadow-sm border border-slate-200" : "text-slate-500 hover:bg-slate-100"}`}
                 >
                   <div className="flex items-center gap-3">
@@ -288,7 +375,7 @@ export function ChatInterface({ initialLocale = "en" }: { initialLocale?: Locale
                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">ECI Verification Live</span>
                 </div>
-                <button className="p-2 hover:bg-slate-200 rounded-lg text-slate-400">
+                <button aria-label="View Info" className="p-2 hover:bg-slate-200 rounded-lg text-slate-400">
                    <Info className="w-4 h-4" />
                 </button>
              </div>
@@ -325,6 +412,7 @@ export function ChatInterface({ initialLocale = "en" }: { initialLocale?: Locale
                     <button 
                       key={idx}
                       onClick={() => onSuggestionClick(s)}
+                      aria-label={`Suggestion: ${s}`}
                       className="p-4 text-left border border-slate-100 bg-slate-50 hover:bg-white hover:border-slate-200 hover:shadow-xl rounded-2xl text-sm font-bold transition-all flex items-center justify-between group"
                     >
                       {s}
@@ -365,6 +453,13 @@ export function ChatInterface({ initialLocale = "en" }: { initialLocale?: Locale
                       {msg.type === 'error' && (
                         <div className="p-4 bg-red-50 text-red-700 rounded-2xl border border-red-100 text-sm">{msg.content}</div>
                       )}
+                      {msg.type === 'out_of_scope' && (
+                        <div className="p-6 bg-slate-50 text-slate-600 rounded-3xl border border-slate-200 text-sm font-medium italic flex items-center gap-3">
+                          <Info className="w-5 h-5 text-slate-400" />
+                          {msg.content}
+                        </div>
+                      )}
+
                     </div>
 
                     {msg.role === 'assistant' && msg.type !== 'error' && (
@@ -385,6 +480,11 @@ export function ChatInterface({ initialLocale = "en" }: { initialLocale?: Locale
                             const shareText = `🚨 *CivicShield AI Update* 🚨\n\n${msg.content.substring(0, 500)}${msg.content.length > 500 ? '...' : ''}\n\n✅ *Verified Information*\n🔗 Source: ${process.env.NEXT_PUBLIC_APP_URL || 'https://civicshield.io'}`;
                             window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank');
                           }} 
+                        />
+                        <ActionButton 
+                          icon={isMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />} 
+                          label="Listen" 
+                          onClick={() => speakMessage(msg.content)} 
                         />
                         <ActionButton icon={<Bookmark className="w-3.5 h-3.5" />} label="Save" onClick={() => {}} />
                         <ActionButton 
@@ -430,25 +530,30 @@ export function ChatInterface({ initialLocale = "en" }: { initialLocale?: Locale
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder={mode === 'explain' ? t.inputPlaceholderExplain : t.inputPlaceholderFact}
+                aria-label="Chat input"
                 className="flex-1 py-4 text-base md:text-lg bg-transparent outline-none placeholder:text-slate-400 font-medium"
                 disabled={isLoading}
               />
               <div className="flex items-center gap-2">
                 <button 
                   type="button" 
-                  className="p-3 text-slate-400 hover:text-slate-900 transition-colors"
-                  title="Voice input"
+                  onClick={isListening ? stopListening : startListening}
+                  className={`p-3 transition-colors ${isListening ? 'text-red-500 animate-pulse' : 'text-slate-400 hover:text-slate-900'}`}
+                  title={isListening ? "Stop listening" : "Voice input"}
+                  aria-label={isListening ? "Stop voice input" : "Start voice input"}
                 >
-                  <Mic className="w-5 h-5" />
+                  {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
                 </button>
                 <button 
                   type="submit"
                   disabled={!input.trim() || isLoading}
                   className="w-12 h-12 bg-slate-900 text-white rounded-2xl flex items-center justify-center hover:bg-black transition-all disabled:opacity-20 disabled:scale-95"
+                  aria-label="Send message"
                 >
                   <Send className="w-5 h-5" />
                 </button>
               </div>
+
             </form>
 
             <div className="mt-4 flex items-center justify-center gap-6">
@@ -458,10 +563,10 @@ export function ChatInterface({ initialLocale = "en" }: { initialLocale?: Locale
         </div>
       </main>
 
-      <style jsx global>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-      `}</style>
+      `}} />
     </div>
   );
 }

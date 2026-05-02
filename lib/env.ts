@@ -12,12 +12,14 @@ const validateEnv = () => {
   // During build time, we skip strict validation to allow the build to proceed
   // without needing secrets in the build environment.
   const isBuildTime = process.env.NEXT_PHASE === 'phase-production-build';
+  const isTest = process.env.NODE_ENV === 'test';
   
   try {
-    if (isBuildTime) {
+    if (isBuildTime || isTest) {
       return envSchema.partial().parse(process.env) as z.infer<typeof envSchema>;
     }
     return envSchema.parse(process.env);
+
   } catch (error) {
     if (error instanceof z.ZodError) {
       const missingVars = error.errors.map((e) => e.path.join(".")).join(", ");

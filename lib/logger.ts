@@ -16,11 +16,27 @@ export interface LogEntry {
 
 export const logger = {
   log: (entry: LogEntry) => {
-    // PII Guard: Ensure we never log raw user messages directly in the message or labels
-    if (entry.message.toLowerCase().includes("user_message") || 
-        (entry.labels && JSON.stringify(entry.labels).toLowerCase().includes("user_message"))) {
-      entry.message = "REDACTED_PII_LOG_ATTEMPT";
-      entry.labels = {};
+    // PII Guard: Automated detection and redaction of sensitive data patterns
+    const redactPII = (val: any): any => {
+      if (typeof val === "string") {
+        return val
+          .replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, "[REDACTED_EMAIL]") // Emails
+          .replace(/(\+91[\-\s]?)?[0]?(91)?[6789]\d{9}/g, "[REDACTED_PHONE]") // Indian Phone Numbers
+          .replace(/\b\d{4}[\s\-]?\d{4}[\s\-]?\d{4}\b/g, "[REDACTED_ID]"); // Generic 12-digit ID (Aadhaar style)
+      }
+      if (typeof val === "object" && val !== null) {
+        const redacted: any = Array.isArray(val) ? [] : {};
+        for (const key in val) {
+          redacted[key] = redactPII(val[key]);
+        }
+        return redacted;
+      }
+      return val;
+    };
+
+    entry.message = redactPII(entry.message);
+    if (entry.labels) {
+      entry.labels = redactPII(entry.labels);
     }
 
     const payload = {

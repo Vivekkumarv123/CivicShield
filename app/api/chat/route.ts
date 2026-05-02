@@ -12,7 +12,7 @@ const chatRequestSchema = z.object({
 
 // Configure CORS
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*", // Loosen for production stability
+  "Access-Control-Allow-Origin": process.env.NEXT_PUBLIC_APP_URL || "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type",
 };
@@ -23,17 +23,14 @@ export async function OPTIONS() {
 
 export async function POST(req: NextRequest) {
   try {
-    // Basic CORS check on origin - LOOSENED FOR PRODUCTION DEBUGGING
+    // Strictly validate request origin against allowed production domains to prevent CSRF
     const origin = req.headers.get("origin");
-    const allowedOrigin = process.env.NEXT_PUBLIC_APP_URL;
-    
-    if (process.env.NODE_ENV === "production" && origin !== allowedOrigin) {
-       console.error("403 Triggered Because: Origin mismatch or missing.", {
-         receivedOrigin: origin,
-         expectedOrigin: allowedOrigin,
-         userAgent: req.headers.get("user-agent")
-       });
-       // return NextResponse.json({ error: "Forbidden" }, { status: 403 }); // Bypassed for now
+    const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || [];
+    const isAllowedOrigin = process.env.NODE_ENV === 'development' || (origin && allowedOrigins.includes(origin));
+
+    if (process.env.NODE_ENV === "production" && !isAllowedOrigin) {
+       logger.warn("403 Forbidden: Origin mismatch.", { received: origin });
+       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     // Rate Limiting
@@ -63,9 +60,6 @@ export async function POST(req: NextRequest) {
     const validationResult = chatRequestSchema.safeParse(parsedBody);
     
     if (!validationResult.success) {
-      if (parsedBody.message && parsedBody.message.length > 500) {
-        return NextResponse.json({ error: "Message too long" }, { status: 400, headers: corsHeaders });
-      }
       return NextResponse.json({ error: "Invalid request" }, { status: 400, headers: corsHeaders });
     }
 
@@ -75,24 +69,16 @@ export async function POST(req: NextRequest) {
     logger.info("chat_request", { locale, mode: "explain" });
 
     // AI Logic (Explain Mode)
-    try {
-       const streamOutput = await geminiService.streamExplanation(message, locale);
-       const streamResponse = streamOutput.toTextStreamResponse();
-       
-       // Append CORS and Rate Limit headers to the stream response
-       Object.entries({ ...corsHeaders, ...headers }).forEach(([key, value]) => {
-           streamResponse.headers.set(key, value);
-       });
-       
-       return streamResponse;
+    const streamOutput = await geminiService.streamExplanation(message, locale);
+    const streamResponse = streamOutput.toTextStreamResponse();
+    
+    // Append CORS and Rate Limit headers
+    Object.entries({ ...corsHeaders, ...headers }).forEach(([key, value]) => {
+        streamResponse.headers.set(key, value);
+    });
+    
+    return streamResponse;
 
-    } catch (e: any) {
-        if (e.message === "OUT_OF_SCOPE_CAUGHT") {
-            const outOfScopeResponse = { type: "OUT_OF_SCOPE", message: "I can only help with Indian election processes. Please ask me about voting, candidates, ECI rules, or the election timeline." };
-            return NextResponse.json(outOfScopeResponse, { status: 200, headers: { ...corsHeaders, ...headers } });
-        }
-        throw e; // goes to outer catch
-    }
 
   } catch (error) {
     logger.error("api_chat_error", { error: String(error) });
