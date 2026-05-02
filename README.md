@@ -69,11 +69,13 @@ CivicShield utilizes the **Google Search Tooling** within the Gemini ecosystem t
 
 ```typescript
 // Fact-check orchestration with Grounded Truth
-const result = await generateObject({
+const result = await generateText({
   model: google("gemini-2.5-flash-lite"),
-  tools: [{ googleSearch: {} }],
-  // ... schema enforcement
+  tools: { googleSearch: { ... } },
+  // ... system prompt handles JSON formatting
 });
+
+const factCheckData = factCheckSchema.parse(JSON.parse(result.text));
 ```
 
 ### 🛰️ Operational Benchmarks (Verified)

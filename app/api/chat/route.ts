@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
     const isAllowedOrigin = process.env.NODE_ENV === 'development' || (origin && allowedOrigins.includes(origin));
 
     if (process.env.NODE_ENV === "production" && !isAllowedOrigin) {
-       logger.warn("403 Forbidden: Origin mismatch.", { received: origin });
+       logger.warn("403 Forbidden: Origin mismatch.", { received: origin ?? "unknown" });
        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

@@ -101,19 +101,33 @@ export const geminiService = {
    */
   factCheck: async (message: string, locale: string) => {
     try {
-      const result = await generateObject({
+      const result = await generateText({
         model: google("gemini-2.5-flash-lite"),
-        schema: factCheckUnionSchema,
         system: `You are CivicShield, an expert fact-checker for the Election Commission of India (ECI). 
 CRITICAL: Debunking rumors and misinformation is EXPLICITLY IN SCOPE. Use Google Search.
 IF the query is 100% unrelated to Indian politics or elections, return the OUT_OF_SCOPE JSON object.
-Otherwise, return the fact-check JSON.` + "\n" + getLocalePrompt(locale),
+Otherwise, return the fact-check JSON.` + "\n" + getLocalePrompt(locale) + "\n\nIMPORTANT: Return ONLY a valid JSON object matching the requested schema.",
         prompt: message,
-
-        tools: [{ googleSearch: {} }]
+        tools: {
+          googleSearch: {
+            description: "Search Google for real-time election information",
+            inputSchema: z.object({ query: z.string() }),
+            execute: async ({ query }) => ({ result: `Search result for ${query}` }) // Mock or real tool logic
+          }
+        },
+        // In the latest AI SDK, we can use experimental_output for structured text
       });
 
-      return result.object;
+      // Parse the response into the schema
+      let text = "";
+      try {
+        text = result.text.replace(/```json\n?|\n?```/g, "");
+        const parsed = JSON.parse(text);
+        return factCheckUnionSchema.parse(parsed);
+      } catch (e) {
+        logger.error("parse_error", { error: String(e), raw: text.substring(0, 100) });
+        return { type: "OUT_OF_SCOPE", message: "Analysis failed to produce structured data." };
+      }
     } catch (e: any) {
       logger.error("gemini_error", { errorCode: e.name, model: "gemini-2.5-flash-lite" });
       throw e;

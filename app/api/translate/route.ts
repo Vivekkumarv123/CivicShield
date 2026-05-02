@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { generateText } from "ai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { env } from "../../../lib/env";
+import { logger } from "../../../lib/logger";
 
 const google = createGoogleGenerativeAI({
   apiKey: env.GOOGLE_GEMINI_API_KEY,
@@ -24,13 +25,13 @@ export async function POST(req: NextRequest) {
     Text: ${text}`;
 
     const result = await generateText({
-      model: google("gemini-2.5-flash"),
+      model: google("gemini-2.5-flash-lite"),
       prompt: prompt,
     });
 
     return NextResponse.json({ translatedText: result.text.trim() });
   } catch (error) {
-    console.error("Translation error:", error);
+    logger.error("api_translate_error", { error: String(error) });
     return NextResponse.json({ error: "Translation failed" }, { status: 500 });
   }
 }

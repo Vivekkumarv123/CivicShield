@@ -11,7 +11,7 @@ import * as ai from 'ai';
 jest.mock('ai', () => ({
   streamObject: jest.fn(),
   generateObject: jest.fn(),
-  generateText: jest.fn()
+  generateText: jest.fn().mockResolvedValue({ text: '{}' })
 }));
 
 // Mock @ai-sdk/google
@@ -110,7 +110,7 @@ describe('Gemini Service', () => {
 
   // --- factCheck ---
   describe('factCheck()', () => {
-    it('calls generateObject and returns the result object', async () => {
+    it('calls generateText and returns the parsed result object', async () => {
       const mockResponse = {
         type: "FACTCHECK",
         verdict: 'True',
@@ -119,22 +119,23 @@ describe('Gemini Service', () => {
         sources: [],
         groundingChunks: []
       };
-      (ai.generateObject as jest.Mock).mockResolvedValue({ object: mockResponse });
+      (ai.generateText as jest.Mock).mockResolvedValue({ text: JSON.stringify(mockResponse) });
 
       const result = await geminiService.factCheck('Is EVM hackable?', 'en');
 
-      expect(ai.generateObject).toHaveBeenCalled();
+      expect(ai.generateText).toHaveBeenCalled();
       expect(result).toEqual(mockResponse);
     });
 
     it('passes Hindi locale to the system prompt', async () => {
-      (ai.generateObject as jest.Mock).mockResolvedValue({
-        object: { type: "FACTCHECK", verdict: 'True', confidence: 0.5, explanation: 'Test' }
+      const mockResponse = { type: "FACTCHECK", verdict: 'True', confidence: 0.5, explanation: 'Test' };
+      (ai.generateText as jest.Mock).mockResolvedValue({
+        text: JSON.stringify(mockResponse)
       });
 
       await geminiService.factCheck('Claim', 'hi');
 
-      expect(ai.generateObject).toHaveBeenCalledWith(expect.objectContaining({
+      expect(ai.generateText).toHaveBeenCalledWith(expect.objectContaining({
         system: expect.stringContaining('HINDI'),
       }));
     });
@@ -142,7 +143,7 @@ describe('Gemini Service', () => {
     it('logs error and re-throws on factcheck failure', async () => {
       const err = new Error('FC_FAIL');
       err.name = 'FactCheckError';
-      (ai.generateObject as jest.Mock).mockRejectedValue(err);
+      (ai.generateText as jest.Mock).mockRejectedValue(err);
 
       await expect(geminiService.factCheck('?', 'en')).rejects.toThrow('FC_FAIL');
       expect(logger.error).toHaveBeenCalledWith('gemini_error', expect.objectContaining({

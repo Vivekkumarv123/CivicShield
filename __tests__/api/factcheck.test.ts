@@ -39,6 +39,7 @@ jest.mock("../../lib/rate-limit", () => ({
 jest.mock("../../lib/logger", () => ({
   logger: {
     info: jest.fn(),
+    warn: jest.fn(),
     error: jest.fn(),
   },
 }));
@@ -88,7 +89,6 @@ describe("FactCheck API", () => {
   });
 
   it("returns 403 for forbidden origin in production", async () => {
-    const consoleSpy = jest.spyOn(console, "error").mockImplementation(() => { });
     const originalNodeEnv = process.env.NODE_ENV;
     (process.env as any).NODE_ENV = "production";
     const req = new NextRequest("http://localhost/api/factcheck", {
@@ -98,7 +98,6 @@ describe("FactCheck API", () => {
     const res = await POST(req);
     expect(res.status).toBe(403);
     (process.env as any).NODE_ENV = originalNodeEnv;
-    consoleSpy.mockRestore();
   });
 
   it("returns 429 when rate limited", async () => {

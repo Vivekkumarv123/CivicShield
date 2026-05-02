@@ -25,7 +25,10 @@ export async function POST(req: NextRequest) {
     const allowedOrigin = process.env.NEXT_PUBLIC_APP_URL;
 
     if (process.env.NODE_ENV === "production" && origin && origin !== allowedOrigin) {
-       console.error("403 Forbidden: Origin mismatch.", { received: origin, expected: allowedOrigin });
+       logger.warn("403 Forbidden: Origin mismatch.", { 
+         received: origin, 
+         expected: allowedOrigin ?? "not_set" 
+       });
        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
